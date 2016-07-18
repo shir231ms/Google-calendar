@@ -5,7 +5,7 @@
       // Developer Console, https://console.developers.google.com
       var CLIENT_ID = '443765056410-8jvcj6ftkeq3913m5v94l19lmjdb1o3d.apps.googleusercontent.com';
       var SCOPES = ["https://www.googleapis.com/auth/calendar"];
-
+		var token;
       /**
        * Check if current user has authorized this application.
        */
@@ -18,6 +18,14 @@
           }, handleAuthResult);
       }
 
+	  function setCookie(c_name,value,expiredays)
+	  {
+		var exdate=new Date();
+		exdate.setDate(exdate.getDate()+expiredays);
+		document.cookie=c_name+ "=" +escape(value)+
+		((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+	  }
+	  
       /**
        * Handle response from authorization server.
        *
@@ -26,7 +34,9 @@
       function handleAuthResult(authResult) {
         var authorizeDiv = document.getElementById('authorize-div');
         if (authResult && !authResult.error) {
-          // Hide auth UI, then load client library.
+		  token=gapi.auth.getToken().access_token;
+		  setCookie("token",token,1);
+		  // Hide auth UI, then load client library.
           authorizeDiv.style.display = 'none';
           loadCalendarApi();
         } else {
@@ -42,17 +52,20 @@
        * @param {Event} event Button click event.
        */
       function handleAuthClick(event) {
+		var account = document.getElementById('email').value;
+		setCookie("account",account,1);
         gapi.auth.authorize(
           {
 		   client_id: CLIENT_ID, 
-		   //redirect_uri: 'https://people.cs.nctu.edu.tw/~scyuan1221/home_page.html',
+		   redirect_uri: 'http://people.cs.nctu.edu.tw/~scyuan1221/token.php',
 		   scope: SCOPES, 
-		   immediate: false/*,
+		   immediate: false,
 		   access_type: 'offline' ,
 		   response_type: 'code',
-		   approval_prompt: 'force'*/
+		   approval_prompt: 'force'
 		  },
 		  handleAuthResult);
+		  
         return false;
       }
 
@@ -67,7 +80,7 @@
 		document.write(
 		'<form action="makingevents.html" method="POST"><button type="submit">Making Events</button></form>');
 		document.write(
-		'<form action="refresh_access.html" method="POST"><button type="submit">Refresh Access Token</button></form>');
+		'<form action="refresh_access.php" method="POST"><button type="submit">Refresh Access Token</button></form>');
       }
 
       /**
@@ -116,7 +129,6 @@
         var textContent = document.createTextNode(message + '\n');
         pre.appendChild(textContent);
       }
-
     </script>
     <script src="https://apis.google.com/js/client.js?onload=checkAuth">
     </script>
@@ -124,11 +136,15 @@
   <body>
 	<!-- auth state -->
     <div id="authorize-div" style="display: none">
-      <span>Authorize access to Google Calendar API</span>
-      <!--Button for the user to click to initiate auth sequence -->
-      <button id="authorize-button" onclick="handleAuthClick(event)">
-        Authorize
-      </button>
+      <span>Authorize access to Google Calendar API</span></p>
+	  Please Enter Your Email:</p>
+	  <form>
+	    <input type="text"id="email"></p>
+		<!--Button for the user to click to initiate auth sequence -->
+		<button id="authorize-button" onclick="handleAuthClick(event)">
+		Authorize
+		</button>
+	  </form>
     </div>
 	<pre id="output"></pre>
   </body>
