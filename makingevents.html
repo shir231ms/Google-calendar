@@ -1,0 +1,107 @@
+<html>
+  <head>
+	<script>
+	// Your Client ID can be retrieved from your project in the Google
+      // Developer Console, https://console.developers.google.com
+      var CLIENT_ID = '443765056410-8jvcj6ftkeq3913m5v94l19lmjdb1o3d.apps.googleusercontent.com';
+      var SCOPES = ["https://www.googleapis.com/auth/calendar"];
+
+      /**
+       * Check if current user has authorized this application.
+       */
+      function checkAuth() {
+        gapi.auth.authorize(
+          {
+            'client_id': CLIENT_ID,
+            'scope': SCOPES.join(' '),
+            'immediate': true
+          }, handleAuthResult);
+      }
+
+      /**
+       * Handle response from authorization server.
+       *
+       * @param {Object} authResult Authorization result.
+       */
+      function handleAuthResult(authResult) {
+        var authorizeDiv = document.getElementById('authorize-div');
+        if (authResult && !authResult.error) {
+          // Hide auth UI, then load client library.
+          authorizeDiv.style.display = 'none';
+          loadCalendarApi();
+        } else {
+          // Show auth UI, allowing the user to initiate authorization by
+          // clicking authorize button.
+          authorizeDiv.style.display = 'inline';
+        }
+      }
+
+      /**
+       * Load Google Calendar client library. List upcoming events
+       * once client library is loaded.
+       */
+      function loadCalendarApi() {
+        gapi.client.load('calendar', 'v3', insertEvents);
+	   }
+
+      /**
+       * Print the summary and start datetime/date of the next ten events in
+       * the authorized user's calendar. If no events are found an
+       * appropriate message is printed.
+       */
+      function insertEvents() {
+		var small= document.getElementById('start_time').value;
+		var large= document.getElementById('end_time').value;
+		var sum = document.getElementById('summary').value;
+		var event = {
+		  'summary': sum,
+		  'start':{
+			'date':small
+		  },
+		  'end':{
+			'date':large
+		  },
+		};
+		
+		var request = gapi.client.calendar.events.insert({
+		  'calendarId': 'primary',
+		  'resource': event
+		});
+
+		request.execute(function(event) {
+		  appendPre('Event created: \n' + event.htmlLink);
+		});
+      }
+
+      /**
+       * Append a pre element to the body containing the given message
+       * as its text node.
+       *
+       * @param {string} message Text to be placed in pre element.
+       */
+      function appendPre(message) {
+        var pre = document.getElementById('output');
+		pre.innerHTML="";
+        var textContent = document.createTextNode(message + '\n');
+        pre.appendChild(textContent);
+      }
+    </script>
+    <script src="https://apis.google.com/js/client.js?onload=checkAuth">
+    </script>
+  </head>
+  <body>
+	<div>
+		Summary: </p>
+		<input type="text"id="summary"></p>
+		Start Date: </p>
+		<input type="date"id="start_time"></p>
+		End Date:   </p>
+		<input type="date"id="end_time"></p>
+		<button onclick="loadCalendarApi()"-->Make Events</button></p>
+	</div>
+	<form action="quickstart.html">
+		<button type="submit">Back</button></p>
+	</form>
+	<pre id="output"></pre>
+  </body>
+</html>

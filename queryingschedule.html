@@ -1,0 +1,147 @@
+<html>
+  <head>
+	<script>
+	// Your Client ID can be retrieved from your project in the Google
+      // Developer Console, https://console.developers.google.com
+      var CLIENT_ID = '443765056410-8jvcj6ftkeq3913m5v94l19lmjdb1o3d.apps.googleusercontent.com';
+      var SCOPES = ["https://www.googleapis.com/auth/calendar"];
+	  //var show_head=0;
+	  //var n=1;
+      /**
+       * Check if current user has authorized this application.
+       */
+      function checkAuth() {
+        gapi.auth.authorize(
+          {
+            'client_id': CLIENT_ID,
+            'scope': SCOPES.join(' '),
+            'immediate': true
+          });
+      }
+
+      /**
+       * Handle response from authorization server.
+       *
+       * @param {Object} authResult Authorization result.
+       */
+      
+
+      /**
+       * Load Google Calendar client library. List upcoming events
+       * once client library is loaded.
+       */
+      function loadCalendarApi() {
+        gapi.client.load('calendar', 'v3', listUpcomingEvents);
+	   }
+
+      /**
+       * Print the summary and start datetime/date of the next ten events in
+       * the authorized user's calendar. If no events are found an
+       * appropriate message is printed.
+       */
+      function listUpcomingEvents() {
+		var form= document.getElementById('myTable');
+		form.innerHTML="";
+		var small= document.getElementById('start_date').value;
+		var large= document.getElementById('end_date').value;
+		var string1=small.split("-");
+		var string2=large.split("-");
+		var value1= parseInt(string1[0]+string1[1]+string1[2]);
+		var value2= parseInt(string2[0]+string2[1]+string2[2]);
+        var request = gapi.client.calendar.events.list({
+          'calendarId': 'primary',
+          'timeMin': (new Date()).toISOString(),
+          'showDeleted': false,
+          'singleEvents': true,
+          'orderBy': 'startTime'
+        });
+
+        request.execute(function(resp) {
+          var events = resp.items;
+		  var n=1;
+		  var bool=0;
+          if (events.length > 0) {
+			for (i = 0; i < events.length; i++) {
+			  var event = events[i];
+			  var when = event.start.dateTime;
+			  var when_end = event.end.dateTime;
+			  if (!when) {
+				when = event.start.date;
+			  }
+			  if (!when_end) {
+				when_end = event.end.date;
+			  }
+			  var string3=(when.slice(0,10)).split("-");
+			  var string4=(when_end.slice(0,10)).split("-");
+			  var value3= parseInt(string3[0]+string3[1]+string3[2]);
+			  var value4= parseInt(string4[0]+string4[1]+string4[2]);
+			  if(value3>=value1 && value3<=value2){
+				if(bool==0){
+					//compare all list member
+					var row = form.insertRow(0);
+					var mem0 = row.insertCell(0);
+					var mem1 = row.insertCell(1);
+					var mem2 = row.insertCell(2);
+					mem0.innerHTML = "Summary";
+					mem1.innerHTML = "Start Time";
+					mem2.innerHTML = "End Time"; 
+					bool=1;
+				}
+				var row = form.insertRow(n);
+			    var mem0 = row.insertCell(0);
+			    var mem1 = row.insertCell(1);
+			    var mem2 = row.insertCell(2);
+			    mem0.innerHTML = event.summary;
+			    mem1.innerHTML = when;
+			    mem2.innerHTML = when_end; 
+				n++;
+			  }
+			}
+			if(bool==0){
+				appendPre('No events found in the range.');
+			}
+			else{
+				appendPre('');
+			}
+			bool=0;
+          } 
+		  else {
+            appendPre('No upcoming events found.');
+          }
+        });
+      }
+
+      /**
+       * Append a pre element to the body containing the given message
+       * as its text node.
+       *
+       * @param {string} message Text to be placed in pre element.
+       */
+      function appendPre(message) {
+        var pre = document.getElementById('output');
+		pre.innerHTML="";
+        var textContent = document.createTextNode(message + '\n');
+        pre.appendChild(textContent);
+      }
+    </script>
+    <script src="https://apis.google.com/js/client.js?onload=checkAuth">
+    </script>
+  </head>
+  <body>
+	<div>
+		Start Date: </p>
+		<input id="start_date" type="date"></p>
+		End Date:   </p>
+		<input id="end_date" type="date"></p>
+		<button onclick="loadCalendarApi()">List Events</button></p>
+	</div>
+	<form action="quickstart.html">
+		<button type="submit">Back</button></p>
+	</form>
+	<pre id="output"></pre>
+	<form id="re">
+		<table id="myTable" border="1" cellspacing="2">
+		</table>
+	</form>
+  </body>
+</html>
